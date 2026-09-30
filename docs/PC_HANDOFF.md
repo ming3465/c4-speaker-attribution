@@ -1,7 +1,8 @@
 # PC Handoff — Remaining C4 GPU Runs
 
-*Written 2026-09-30. Hardware: Windows PC with an RTX 2070 Super (8 GB). The
-laptop session ends here, and work continues in Claude Code on the PC.*
+*Written 2026-09-30. Work continues in Claude Code on the PC (Windows, RTX
+2070 Super). All GPU runs go to one rented Runpod A40 (see the next section).
+The PC sections below remain as a fallback.*
 
 ## For the next Claude Code session: read these first
 
@@ -31,6 +32,62 @@ The main result is done, committed and written up:
 - `qwen2.5:72b` is dropped: the paper reports readers up to 32B.
 
 The PC runs **extensions** to that result, not the result itself.
+
+## Decided 2026-09-30: all GPU runs on one Runpod A40
+
+Every GPU run goes to **one A40 pod** on Runpod ($0.49/hr on Secure Cloud).
+The PC does not run models. Claude Code on the PC writes the code, starts the
+pod and analyses the results. The runbook for the pod is the **Fallback: rent
+an A40 on Runpod** section below.
+
+**Do the code first, before renting.** An idle pod still bills.
+
+1. **Check licences** for ICSI and the high-signal corpus (Supreme Court oral
+   arguments via ConvoKit, or parliamentary debates). Record the result in
+   `data/README.md`.
+2. **Write converters** to the utterance contract, following the pattern of
+   `src/datasets/ami.py`, with tests. The ICSI release on the Edinburgh site
+   uses the same NXT format as AMI, so reuse that code.
+   - `src/datasets/icsi.py`
+   - `src/datasets/elitr.py`
+   - one converter for the high-signal corpus
+3. **Add jobs to `scripts/runpod/bootstrap.sh`:** one per new corpus (a
+   `DATASET` variable plus its download), and a swap-only job for the bigger
+   label-swap arm. The swap-only job also needs a small runner option.
+4. **Amend the plan.** Before any new run, add the new corpora and the swap
+   arm to `docs/C4_ANALYSIS_PLAN.md`, with the same design and rules. Commit
+   it.
+5. **Rent one A40.** Check the credit first under runpod.io → Billing. Then
+   run the jobs back to back in this order, so the most important results come
+   first:
+
+| Order | Job | Time (estimate) | Cost |
+| --- | --- | --- | --- |
+| 0 | Setup and model downloads (7B, 14B, 32B) | ~1 h | $0.50 |
+| 1 | 32B on AMI (second passing reader) | ~2.5–3 h | ~$1.40 |
+| 2 | Summarizer on AMI (7B summaries, 14B reader) | ~4–5 h | ~$2.25 |
+| 3 | 14B + 32B on ELITR | ~4–4.5 h | ~$2.10 |
+| 4 | 14B + 32B on ICSI | ~4–4.5 h | ~$2.10 |
+| 5 | 14B + 32B on the high-signal corpus (long turns, slower) | ~6–9 h | ~$3.60 |
+| 6 | Bigger label-swap arm (14B, AMI) | ~1 h | $0.50 |
+| — | Disk, about 2 days | — | $0.60 |
+| | **Total** | **~25–30 h, about 1.5 days** | **≈ $13–15** |
+
+**Budget.**
+
+- The total uses almost all of the $15 credit ($10 plus a $5 referral), with
+  no room for reruns. Add about $5 of buffer, or drop step 6 if money runs
+  short.
+- A failed headroom gate makes that job about a fifth as expensive, because no
+  sweep runs.
+- **Stop the pod after the last job, and terminate it once the results are
+  copied.**
+
+**Out of scope for this budget:**
+
+- the summarizer on the three new corpora (about $5 more);
+- `qwen2.5:72b` (dropped);
+- the AHN-layer probe.
 
 ## What the PC can and cannot run
 
