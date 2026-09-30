@@ -131,6 +131,97 @@ These choices were made after seeing the pilot but before any AMI outcome:
   attributor's own headroom was clear: 48.8% uncompressed, against a best
   label-only heuristic of 34.6%.
 
+### 2026-09-30, three more corpora
+
+The study extends from AMI to three further multi-party corpora, each read
+through the identical registered design -- 20-turn windows, stride 10, targets
+of at least 8 words, budgets 1.0 / 0.5 / 0.25 / 0.1, per-message allocation,
+the first 1,200 probes of the seed-0 shuffle -- with the same decision rules,
+the same +-5 pt margin and every reader reported separately.
+
+| Corpus | Licence | Conversations | Utterances | Speakers per conversation |
+| --- | --- | ---: | ---: | --- |
+| ICSI core NXT v1.0 | CC BY 4.0 | 75 | 108,984 | 3-10 |
+| ELITR Minuting (English) | CC BY-NC-SA 4.0 | 119 | 33,298 | 2-14 |
+| Supreme Court (ConvoKit, 2017-2019) | none stated | 194 | 46,010 | 8-13 |
+
+Construction checks, run with `--controls` before any reader saw these corpora:
+
+| Corpus | Probes | Contexts | Clusters | Chance | Frequency | Turn-taking | Target words | Swap-eligible |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| AMI | 1,200 | 1,126 | 169 | 27.6% | 34.6% | 33.8% | 28.4 | 278 |
+| ICSI | 1,200 | 1,132 | 75 | 30.8% | **55.2%** | 18.7% | 15.2 | 189 |
+| ELITR | 1,200 | 998 | 119 | 33.5% | 36.1% | **54.9%** | 41.4 | 185 |
+| Supreme Court | 1,200 | 1,055 | 192 | 23.7% | **42.6%** | 35.3% | 62.7 | 254 |
+
+Zero invariant violations on all four.
+
+**Read the gate against those shortcuts, not against chance.** The gate already
+requires a significant lead over the stronger label-only heuristic, and on the
+three new corpora that heuristic sits 18.9 to 24.4 points above chance, against
+7.0 on AMI. A gate failure is the result for that reader on that corpus, and no
+sweep follows it. This is recorded before the runs so that a failure cannot
+later be reported as a surprise.
+
+The two extremes have identifiable causes, and neither is a defect:
+
+- **ICSI, frequency 55.2%.** Meetings run to 10 speakers but are dominated by
+  one or two, so "name the most-labelled speaker" is strong.
+- **ELITR, turn-taking 54.9%.** The converter makes one utterance per speaker
+  marker, so adjacent turns always have different speakers and "not the
+  neighbours" becomes genuinely informative. Splitting per line instead would
+  weaken the shortcut, at the cost of dropping mean target length from 24.0
+  words to 9.6. Length was preferred; the consequence is recorded here.
+
+**ELITR also keeps in-text entity placeholders.** `[PERSON20]` and the like
+survive in the text, drawn from the same numbering as the speaker markers.
+Speakers are relabelled `Speaker_<letter>` per meeting, so no placeholder
+matches any roster label and none can leak an answer literally.
+
+**Supreme Court speakers are anonymised.** The source names them; the design
+shows the reader `Speaker_<letter>` and nothing else. Justice / Advocate is
+carried as `role`, which never reaches the prompt.
+
+### 2026-09-30, the LLM-summary compressor arm
+
+The registered design is run again with `--compressor summary`
+(`qwen2.5:7b` writes the summaries, the reader reads them) at the same budgets
+and on the same frozen probes, so word-drop and summary compression are paired
+probe by probe at matched word budgets. Reported as a second compressor, never
+pooled with the word-drop arm.
+
+### 2026-09-30, a swap-only option for the label-swap arm
+
+The binding index was the one estimate the main study could not read: +5.4 pts
+[-3.2, +14.4] for `qwen2.5:14b`, inconclusive on 278 probes. Only probes with a
+speaker of equal visible label count qualify, about a quarter of any sample, so
+the arm could previously grow only by re-running the whole sweep.
+
+`--swap-only` keeps just the eligible probes, restricts budgets to
+`--swap-budgets` (1.0, 0.25, 0.1) and runs both conditions on them. `--limit`
+then counts eligible probes. AMI has 14,554 eligible probes across 171
+meetings, so the planned `--limit 1000` is a random subsample of them under the
+same seed-0 shuffle, not a different construction.
+
+**The headroom gate still applies.** Eligible probes are a different population
+from the registered 1,200, so the gate is re-evaluated on them and a failure is
+reported as a result rather than overridden. The arm remains a secondary,
+exploratory outcome, as registered.
+
+### 2026-09-30, the reader's context window
+
+The reader now sends `num_ctx` explicitly instead of accepting Ollama's
+default of 4,096, which truncates longer prompts silently and from the left --
+where the instructions and the candidate roster sit, so a truncated probe would
+still have been graded.
+
+Nothing in the AMI result is affected: its longest prompt estimates at 1,759
+tokens, and ICSI's at 936. The fix matters for the new corpora, where 6 of
+1,200 Supreme Court probes and 9 of 1,200 ELITR probes exceed 4,096 at budget
+1.0. The default is 8,192 and the runs on those two corpora use 16,384.
+`--controls` now reports the longest prompt and warns when it will not fit.
+
+
 ## Results (2026-09-28)
 
 These are reported against the rules above. Rendered tables are in
