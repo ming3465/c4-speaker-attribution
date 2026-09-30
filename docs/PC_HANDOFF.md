@@ -66,6 +66,22 @@ the speed test gives the real figure.
 
 A failed gate makes that job about a fifth of the cost, because no sweep runs.
 
+**Expect gate failures on jobs 3-5, and budget for them.** The label-only
+shortcuts are far stronger on the new corpora than on AMI, and the gate demands
+a significant lead over the stronger of the two. Measured with `--controls`,
+before any reader ran:
+
+| Corpus | Chance | Frequency | Turn-taking | Best shortcut, over chance |
+| --- | ---: | ---: | ---: | ---: |
+| AMI | 27.6% | 34.6% | 33.8% | +7.0 pts |
+| ICSI | 30.8% | **55.2%** | 18.7% | +24.4 pts |
+| ELITR | 33.5% | 36.1% | **54.9%** | +21.4 pts |
+| Supreme Court | 23.7% | **42.6%** | 35.3% | +18.9 pts |
+
+A reader has to beat those, not chance. That is a result either way, and a
+failed gate costs about a fifth of its job -- but do not plan on three passing
+sweeps.
+
 **Out of scope for this budget:**
 
 - the summarizer on the three new corpora (about $5 more);
@@ -159,11 +175,25 @@ disconnect:
 ```bash
 tmux new -s c4
 curl -fsSL https://raw.githubusercontent.com/ming3465/c4-speaker-attribution/main/scripts/runpod/bootstrap.sh -o bootstrap.sh
-bash bootstrap.sh speedtest                     # 32B, 20 probes: check seconds per call first
-bash bootstrap.sh ami                           # job 1: 32B on AMI (gate, then sweep)
-MODEL=qwen2.5:14b bash bootstrap.sh summary     # job 2: summarizer on AMI
-# jobs 3-6 use the DATASET and swap options added in section 4
+
+bash bootstrap.sh speedtest                                 # 32B, 20 probes: seconds per call first
+bash bootstrap.sh sweep                                     # job 1: 32B on AMI
+MODEL=qwen2.5:14b bash bootstrap.sh summary                 # job 2: summarizer on AMI
+
+for m in qwen2.5:14b qwen2.5:32b; do                        # jobs 3, 4, 5
+  DATASET=elitr   MODEL=$m bash bootstrap.sh sweep
+  DATASET=icsi    MODEL=$m bash bootstrap.sh sweep
+  DATASET=supreme MODEL=$m bash bootstrap.sh sweep
+done
+
+MODEL=qwen2.5:14b bash bootstrap.sh swap                    # job 6: 1,000 probes, not 278
 ```
+
+`DATASET` is `ami` | `icsi` | `elitr` | `supreme` and downloads and converts
+that corpus on first use. `MODEL` picks the reader, `LIMIT` the probe cap, and
+`NUM_CTX` the reader's context window -- which defaults to 16,384 on ELITR and
+Supreme Court, whose longest windows run past Ollama's 4,096-token default.
+`bash bootstrap.sh ami` still works as an older name for `sweep`.
 
 - **After the speed test,** compare the real seconds per call with the
   estimates in section 2. Re-estimate the total cost before starting the long
