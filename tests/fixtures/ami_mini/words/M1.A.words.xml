@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<nite:root nite:id="M1.A.words" xmlns:nite="http://nite.sourceforge.net/">
+   <w nite:id="M1.A.words0" starttime="1.0" endtime="1.2">Hi</w>
+   <w nite:id="M1.A.words1" starttime="1.2" endtime="1.2" punc="true">,</w>
+   <w nite:id="M1.A.words2" starttime="1.2" endtime="1.5">I&#39;m</w>
+   <w nite:id="M1.A.words3" starttime="1.5" endtime="1.9">the</w>
+   <w nite:id="M1.A.words4" starttime="1.9" endtime="2.3">manager</w>
+   <w nite:id="M1.A.words5" starttime="2.3" endtime="2.3" punc="true">.</w>
+   <vocalsound nite:id="M1.A.words6" starttime="9.0" endtime="9.5" type="laugh"/>
+   <w nite:id="M1.A.words7" starttime="9.5" endtime="9.8">So</w>
+   <disfmarker nite:id="M1.A.words8" starttime="9.8" endtime="9.8"/>
+   <w nite:id="M1.A.words9" starttime="9.8" endtime="10.2">budget</w>
+   <w nite:id="M1.A.words10" starttime="10.2" endtime="10.5">first</w>
+   <vocalsound nite:id="M1.A.words11" starttime="20.0" endtime="20.4" type="cough"/>
+</nite:root>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<nite:root nite:id="M1.A.segs" xmlns:nite="http://nite.sourceforge.net/">
+   <segment nite:id="M1.sync.1" channel="0" transcriber_start="0.9" transcriber_end="2.4">
+      <nite:child href="M1.A.words.xml#id(M1.A.words0)..id(M1.A.words5)"/>
+   </segment>
+   <segment nite:id="M1.sync.5" channel="0" transcriber_start="8.9" transcriber_end="10.6">
+      <nite:child href="M1.A.words.xml#id(M1.A.words6)..id(M1.A.words10)"/>
+   </segment>
+   <segment nite:id="M1.sync.9" channel="0" transcriber_start="19.9" transcriber_end="20.5">
+      <nite:child href="M1.A.words.xml#id(M1.A.words11)"/>
+   </segment>
+</nite:root>

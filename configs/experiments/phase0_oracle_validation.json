@@ -1,0 +1,36 @@
+{
+  "experiment": "phase0_oracle_validation",
+  "goal": "Test whether oracle future-consumer allocation improves memory accuracy/cost before training a predictor.",
+  "dataset_config": "configs/datasets/groupmembench_finance.json",
+  "oracle_labels": "data/processed/groupmembench/oracle_labels.jsonl",
+  "baselines": [
+    "uniform_compression",
+    "speaker_partitioned_memory",
+    "oracle_future_consumer_allocation"
+  ],
+  "memory_budgets": [
+    0.1,
+    0.25,
+    0.5,
+    0.75
+  ],
+  "initial_compression_policy": {
+    "shared_core_tokens": 40,
+    "oracle_consumer_residual_tokens": 80,
+    "non_consumer_residual_tokens": 0
+  },
+  "metrics": [
+    "answer_accuracy",
+    "retrieval_recall_at_5",
+    "memory_cost",
+    "lost_at_write_time",
+    "not_retrieved",
+    "retrieved_but_misinterpreted"
+  ],
+  "outputs": {
+    "proposed_run_dir": "results/proposed/oracle_future_consumer",
+    "comparison_dir": "results/comparisons/phase_0_oracle_validation",
+    "formation_proxy_summary": "results/comparisons/phase_0_oracle_validation/proxy_summary.json",
+    "retrieval_proxy_summary": "results/comparisons/phase_0_oracle_validation/retrieval_proxy_summary.json"
+  }
+}

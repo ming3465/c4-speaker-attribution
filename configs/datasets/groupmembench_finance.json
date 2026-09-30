@@ -1,0 +1,14 @@
+{
+  "dataset": "GroupMemBench",
+  "source": "huggingface://datasets/kimperyang/GroupMemBench",
+  "domain": "Finance",
+  "remote_file": "data/final/Finance/synthetic_domain_channels_rolevariants_Finance.json",
+  "local_raw_file": "data/raw/groupmembench/synthetic_domain_channels_rolevariants_Finance.json",
+  "schema_summary": "data/processed/groupmembench/schema_summary.json",
+  "message_sample": "data/processed/groupmembench/message_sample.json",
+  "notes": [
+    "Start with Finance because it is one full domain and small enough for schema inspection.",
+    "Question sets live in the code repo github.com/UCSB-NLP-Chang/GroupMemBench under questions/<Domain>/<type>.jsonl (745 questions, 4 domains x 6 types). They carry no evidence pointers.",
+    "Gold evidence for the 214 Finance questions is recovered by HF toddzheng024/groupmembench-agent-sessions (finance/questions_enhanced.jsonl). See docs/DATASET_AUDIT.md for quality caveats."
+  ]
+}

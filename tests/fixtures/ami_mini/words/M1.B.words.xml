@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<nite:root nite:id="M1.B.words" xmlns:nite="http://nite.sourceforge.net/">
+   <w nite:id="M1.B.words0" starttime="3.0" endtime="3.4">Hello</w>
+   <w nite:id="M1.B.words1" starttime="12.0" endtime="12.3">Twelve</w>
+   <w nite:id="M1.B.words2" starttime="12.3" endtime="12.7">euros</w>
+   <w nite:id="M1.B.words3" starttime="12.7" endtime="12.7" punc="true">?</w>
+</nite:root>

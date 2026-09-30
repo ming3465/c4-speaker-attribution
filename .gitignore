@@ -1,0 +1,17 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.venv/
+
+data/raw/
+results/**/*.json
+results/**/*.jsonl
+results/**/*.csv
+results/**/*.log
+.coverage
+data/processed/ami.jsonl
+
+# Third-party data without a redistribution licence: kept locally, never pushed
+data/pilot/
+data/processed/groupmembench/
+data/processed/attribution_ceiling/

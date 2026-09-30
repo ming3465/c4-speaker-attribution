@@ -1,0 +1,24 @@
+{"conversation_id": "m1", "turn_index": 0, "speaker": "PM", "text": "Okay team, agenda first: budget, then the remote control casing, then the deadline.", "role": "project manager", "start_time": 0.0}
+{"conversation_id": "m1", "turn_index": 1, "speaker": "ID", "text": "Before budget I want to flag the casing curvature needs a second prototype.", "role": "industrial designer", "start_time": 6.2}
+{"conversation_id": "m1", "turn_index": 2, "speaker": "ME", "text": "Our survey says users hate losing the remote, so a bright colour matters most.", "role": "marketing", "start_time": 12.9}
+{"conversation_id": "m1", "turn_index": 3, "speaker": "PM", "text": "Noted. Budget ceiling is twelve fifty per unit, that is non negotiable.", "role": "project manager", "start_time": 18.4}
+{"conversation_id": "m1", "turn_index": 4, "speaker": "ID", "text": "Twelve fifty rules out the titanium shell, so I would go with rubberised plastic.", "role": "industrial designer", "start_time": 24.0}
+{"conversation_id": "m1", "turn_index": 5, "speaker": "ME", "text": "mm-hmm", "role": "marketing", "start_time": 29.1}
+{"conversation_id": "m1", "turn_index": 6, "speaker": "ME", "text": "Rubberised plastic also tested well for grip in the survey, young users liked it.", "role": "marketing", "start_time": 30.5}
+{"conversation_id": "m1", "turn_index": 7, "speaker": "PM", "text": "Good. Deadline for the second prototype is Friday, please confirm.", "role": "project manager", "start_time": 36.7}
+{"conversation_id": "m1", "turn_index": 8, "speaker": "ID", "text": "Friday works if the curvature spec is frozen by Wednesday.", "role": "industrial designer", "start_time": 41.2}
+{"conversation_id": "m1", "turn_index": 9, "speaker": "PM", "text": "Then Wednesday is the spec freeze. Next meeting we review the prototype.", "role": "project manager", "start_time": 46.0}
+{"conversation_id": "m1", "turn_index": 10, "speaker": "ME", "text": "I will bring the colour options to that review.", "role": "marketing", "start_time": 51.3}
+{"conversation_id": "m1", "turn_index": 11, "speaker": "ID", "text": "yeah", "role": "industrial designer", "start_time": 54.8}
+{"conversation_id": "m2", "turn_index": 0, "speaker": "A", "text": "Did anyone reproduce the latency spike from last night's deploy?", "start_time": 0.0}
+{"conversation_id": "m2", "turn_index": 1, "speaker": "B", "text": "I did, it only happens when the cache is cold after a restart.", "start_time": 5.0}
+{"conversation_id": "m2", "turn_index": 2, "speaker": "C", "text": "Cold cache would explain the p99 but not the error rate we saw.", "start_time": 10.0}
+{"conversation_id": "m2", "turn_index": 3, "speaker": "B", "text": "The errors are timeouts from the same cold path, I have the traces.", "start_time": 15.0}
+{"conversation_id": "m2", "turn_index": 4, "speaker": "A", "text": "Can we pre-warm the cache during the rollout instead of after it?", "start_time": 20.0}
+{"conversation_id": "m2", "turn_index": 5, "speaker": "C", "text": "Pre-warming doubles rollout time, I would rather add a readiness probe.", "start_time": 25.0}
+{"conversation_id": "m2", "turn_index": 6, "speaker": "B", "text": "A readiness probe on cache hit ratio would work, I can write it today.", "start_time": 30.0}
+{"conversation_id": "m2", "turn_index": 7, "speaker": "A", "text": "Great, then we hold further deploys until the probe ships.", "start_time": 35.0}
+{"conversation_id": "m2", "turn_index": 8, "speaker": "C", "text": "Agreed, and I will add an alert on the p99 so we catch it earlier.", "start_time": 40.0}
+{"conversation_id": "m2", "turn_index": 9, "speaker": "A", "text": "okay", "start_time": 45.0}
+{"conversation_id": "m3", "turn_index": 0, "speaker": "X", "text": "Solo note to self: order more coffee filters.", "start_time": 0.0}
+{"conversation_id": "m3", "turn_index": 1, "speaker": "X", "text": "Also renew the parking permit before the end of the month.", "start_time": 3.0}

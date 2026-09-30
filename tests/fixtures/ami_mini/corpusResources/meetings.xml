@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<nite:root nite:id="meet.00" xmlns:nite="http://nite.sourceforge.net/">
+   <meeting nite:id="meet_1" type="scenario" observation="M1" name="synthetic fixture meeting">
+      <speaker nite:id="M1_1" channel="0" nxt_agent="A" global_name="X001" role="PM"/>
+      <speaker nite:id="M1_2" channel="1" nxt_agent="B" global_name="X002" role="ME"/>
+   </meeting>
+</nite:root>

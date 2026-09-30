@@ -1,0 +1,64 @@
+{
+  "experiment": "failure_decomposition",
+  "contribution": 4,
+  "goal": "Attribute every wrong answer to memory formation, retrieval, or interpretation, at matched memory budgets.",
+  "datasets": {
+    "primary": {
+      "name": "GroupMemBench",
+      "domain": "Finance",
+      "conversations": "data/raw/groupmembench/synthetic_domain_channels_rolevariants_Finance.json",
+      "questions": "data/raw/groupmembench/questions/Finance",
+      "evidence": "data/raw/gmb_agent_sessions/finance/questions_enhanced.jsonl",
+      "questions_with_evidence": 185,
+      "questions_graded": 98
+    },
+    "scale_check": {
+      "name": "LoCoMo",
+      "path": "data/raw/locomo/locomo10.json",
+      "questions_with_evidence": 1977,
+      "questions_graded": 944
+    }
+  },
+  "policies": [
+    "uniform_compression",
+    "recency_window",
+    "speaker_partitioned_memory",
+    "amac_global_utility",
+    "oracle_future_consumer"
+  ],
+  "memory_budgets": [
+    0.1,
+    0.25,
+    0.5,
+    0.75,
+    1.0
+  ],
+  "retrieval": {
+    "method": "bm25",
+    "k1": 1.5,
+    "b": 0.75,
+    "top_k": 5
+  },
+  "formation": {
+    "threshold_tau": 0.65,
+    "compressor": "salient",
+    "chunk_size": 1
+  },
+  "buckets": [
+    "lost_at_write",
+    "not_retrieved",
+    "answer_visible"
+  ],
+  "pending": [
+    "reader pass to split answer_visible into correct vs retrieved_but_misinterpreted",
+    "leave-one-out oracle",
+    "dense retrieval baseline",
+    "evidence recovery for Technology, Healthcare, Manufacturing"
+  ],
+  "outputs": {
+    "detail_csv": "results/proposed/failure_decomposition/decomposition_<dataset>.csv",
+    "summary_json": "results/proposed/failure_decomposition/summary_<dataset>.json",
+    "tables": "results/comparisons/failure_decomposition/",
+    "report": "results/comparisons/failure_decomposition/summary.md"
+  }
+}
