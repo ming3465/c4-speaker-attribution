@@ -41,7 +41,7 @@ below are estimates. The speed test in step 4 gives the real figure.
 | --- | --- | --- |
 | Speed test, 20 probes per model | yes | minutes |
 | LLM-summary compressor: `qwen2.5:7b` writes 43,704 summaries, then `qwen2.5:14b` reads | yes | ~6–12 h of summaries, then ~3–6 h of reading |
-| `qwen2.5:32b` reader (~20 GB) | only if most of the model is in system RAM (needs ≥ 32 GB RAM) | slow, likely a day or more |
+| `qwen2.5:32b` reader (~20 GB) | only if most of the model is in system RAM (needs ≥ 32 GB RAM); otherwise use the Runpod A40 fallback below | slow on the PC, likely a day or more; about 2–3 h on an A40 |
 | Bigger label-swap arm | not yet | the runner needs a swap-only option first |
 | ELITR replication | not yet | the converter is not written yet |
 
@@ -157,6 +157,54 @@ uv run python scripts/evaluation/run_attribution_frozen.py @A --allocation per-m
 
 3. Update `docs/C4_MAIN_STUDY.md`, the plan's *Results* section, and the
    report's to-do list with the new numbers.
+
+## Fallback: rent an A40 on Runpod
+
+Use this when the PC cannot do a run, above all `qwen2.5:32b` on a PC with
+less than 32 GB of RAM, or when you want a run finished faster.
+
+- **Price.** Checked live on 2026-09-30: an A40 (48 GB) costs $0.49/hr on
+  Secure Cloud. Stock was Low, in Montreal (CA-MTL-1) only. Community Cloud is
+  $0.35/hr when it has stock. The L4 was sold out.
+- **Budget.** The 32B run, the summarizer and the extras come to roughly
+  10–14 h, or **about $5–7.50**. Check the balance under runpod.io → Billing:
+  $10 was loaded, plus an expected $5 referral bonus. Runpod's tools cannot
+  read the balance.
+- **Status.** No pod has been created and nothing has been charged.
+
+Steps, using Claude Code on the PC:
+
+1. Install and sign in to the Runpod plugin:
+   `claude plugin marketplace add runpod/runpod-plugins-official`, then
+   `claude plugin install runpod@runpod`, then `/reload-plugins`, then `/mcp`
+   → **runpod** → **Sign in with Runpod**. It signs in with OAuth, so no API
+   key is created.
+2. Add the PC's SSH public key under Runpod → Settings → SSH Public Keys. You
+   need it to log in and copy results.
+3. Create the pod: **A40**, Secure Cloud, the **Runpod PyTorch** template, a
+   **100 GB volume mounted at `/workspace`**, and **TCP port 22** exposed.
+   Claude should state the hourly price before creating it.
+4. On the pod, in the web terminal or over SSH, inside `tmux` so jobs survive
+   a disconnect:
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/ming3465/c4-speaker-attribution/main/scripts/runpod/bootstrap.sh -o bootstrap.sh
+   bash bootstrap.sh speedtest                    # qwen2.5:32b, 20 probes: seconds per call
+   bash bootstrap.sh ami                          # qwen2.5:32b: gate, then sweep
+   MODEL=qwen2.5:14b bash bootstrap.sh summary    # LLM-summary compressor
+   ```
+
+   Everything lives under `/workspace`, so a restarted pod resumes where it
+   stopped.
+5. Copy the results back. The pod page shows its IP and port:
+
+   ```bash
+   scp -P <port> -r root@<ip>:/workspace/results ./results/runpod
+   ```
+
+6. **Stop the pod when the runs finish.** It bills until it is stopped. A
+   stopped pod still bills a little for its volume, so terminate it once the
+   results are copied.
 
 ## Troubleshooting
 

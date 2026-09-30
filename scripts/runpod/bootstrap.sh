@@ -7,14 +7,15 @@
 #
 #   bash bootstrap.sh speedtest     # 20 probes, no gate: measures seconds per call
 #   bash bootstrap.sh ami           # registered design: gate, then sweep if it passes
+#   bash bootstrap.sh summary       # same design, LLM-summary compressor (qwen2.5:7b summarizer)
 #
 # MODEL (default qwen2.5:32b) picks the reader: MODEL=qwen2.5:14b bash bootstrap.sh ami
 set -euo pipefail
 
-JOB="${1:?usage: bootstrap.sh speedtest|ami}"
+JOB="${1:?usage: bootstrap.sh speedtest|ami|summary}"
 case "$JOB" in
-    speedtest|ami) ;;
-    *) echo "unknown job: $JOB (expected speedtest or ami)" >&2; exit 2 ;;
+    speedtest|ami|summary) ;;
+    *) echo "unknown job: $JOB (expected speedtest, ami or summary)" >&2; exit 2 ;;
 esac
 MODEL="${MODEL:-qwen2.5:32b}"
 WORK=/workspace
@@ -31,6 +32,7 @@ if ! pgrep -x ollama >/dev/null; then
     for _ in $(seq 30); do curl -sf localhost:11434/api/tags >/dev/null && break; sleep 1; done
 fi
 ollama pull "$MODEL"
+[ "$JOB" = summary ] && ollama pull qwen2.5:7b
 
 [ -d c4-speaker-attribution ] || git clone -q "$REPO"
 cd c4-speaker-attribution
@@ -46,16 +48,19 @@ fi
 
 DESIGN=(--dataset utterances --utterances data/processed/ami.jsonl --contexts window
         --window-size 20 --window-stride 10 --min-target-words 8
-        --budgets 1.0 0.5 0.25 0.1 --allocation per-message --model "$MODEL")
+        --budgets 1.0 0.5 0.25 0.1 --model "$MODEL")
 
 case "$JOB" in
     speedtest)
         PYTHONHASHSEED=0 uv run python scripts/evaluation/run_attribution_frozen.py "${DESIGN[@]}" \
-            --limit 20 --skip-gate --out-dir "$WORK/results/speedtest" ;;
+            --allocation per-message --limit 20 --skip-gate --out-dir "$WORK/results/speedtest" ;;
     ami)
         PYTHONHASHSEED=0 uv run python scripts/evaluation/run_attribution_frozen.py "${DESIGN[@]}" \
-            --limit 1200 --out-dir "$WORK/results/ami" ;;
+            --allocation per-message --limit 1200 --out-dir "$WORK/results/ami" ;;
+    summary)
+        PYTHONHASHSEED=0 uv run python scripts/evaluation/run_attribution_frozen.py "${DESIGN[@]}" \
+            --compressor summary --summarizer-model qwen2.5:7b --limit 1200 --out-dir "$WORK/results/summary" ;;
     *)
-        echo "unknown job: $JOB (expected speedtest or ami)" >&2
+        echo "unknown job: $JOB (expected speedtest, ami or summary)" >&2
         exit 2 ;;
 esac
