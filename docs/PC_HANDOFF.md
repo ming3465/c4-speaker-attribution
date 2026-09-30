@@ -45,8 +45,9 @@ stock was Low, in Montreal (CA-MTL-1). The L4 was sold out.
 
 - The credit is about $15 ($10 loaded, plus an expected $5 referral bonus).
   Check it under runpod.io → Billing; Runpod's tools cannot read the balance.
-- The full plan costs about $13–15, which leaves no room for reruns. Add about
-  $5 of buffer, or drop job 6.
+- The full plan costs about $13–15, which leaves no room for reruns. **All
+  jobs, including job 6, are kept.** Add about $5 of credit as a buffer before
+  renting.
 
 **Order.** The most important results come first. All times are estimates;
 the speed test gives the real figure.
