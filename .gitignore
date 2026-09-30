@@ -15,3 +15,6 @@ data/processed/ami.jsonl
 data/pilot/
 data/processed/groupmembench/
 data/processed/attribution_ceiling/
+data/processed/icsi.jsonl
+data/processed/elitr.jsonl
+data/processed/supreme.jsonl
