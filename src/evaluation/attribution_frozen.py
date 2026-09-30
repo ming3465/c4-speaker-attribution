@@ -416,16 +416,25 @@ class OllamaHTTPReader:
     hidden speaker as a new person, the opposite of binding. That is a reader
     finding, reported separately; for the forced-choice measurement the answer
     must be on the roster or 1/|roster| is not the floor.
+
+    `num_ctx` is set explicitly and never left to the server. Ollama's default
+    context is 4,096 tokens and it truncates a longer prompt silently, from the
+    left -- which is where the instructions and the candidate roster are. AMI
+    and ICSI never come close (1,759 and 936 estimated tokens at their longest),
+    but on Supreme Court and ELITR windows a handful of probes run past 4,096,
+    and a truncated probe would be scored as if the reader had seen it.
     """
 
     model: str = "qwen2.5:7b"
     base_url: str = DEFAULT_BASE_URL
     timeout_seconds: int = 180
     num_predict: int = 32
+    num_ctx: int = 8192
 
     def answer(self, prompt: str, choices: Iterable[str] | None = None) -> str:
         client = OllamaClient(self.base_url, self.timeout_seconds)
-        options = {"temperature": 0, "seed": 0, "num_predict": self.num_predict}
+        options = {"temperature": 0, "seed": 0,
+                   "num_predict": self.num_predict, "num_ctx": self.num_ctx}
         names = list(choices) if choices else []
         if not names:
             return client.generate(self.model, prompt, options=options)

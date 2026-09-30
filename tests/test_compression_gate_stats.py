@@ -247,7 +247,13 @@ def test_reader_constrains_to_roster(fake_urlopen):
     assert answer == "B"
     assert body["prompt"] == "PROMPT" + JSON_INSTRUCTION
     assert body["format"]["properties"]["author"]["enum"] == ["A", "B"]
-    assert body["options"] == {"temperature": 0, "seed": 0, "num_predict": 32}
+    assert body["options"] == {"temperature": 0, "seed": 0, "num_predict": 32, "num_ctx": 8192}
+
+
+def test_reader_sends_the_context_window_it_was_given(fake_urlopen):
+    """Left to itself Ollama uses 4096 and truncates longer prompts silently."""
+    OllamaHTTPReader(base_url="http://h:1", num_ctx=16384).answer("PROMPT", choices=["A"])
+    assert fake_urlopen[0]["body"]["options"]["num_ctx"] == 16384
 
 
 def test_reader_returns_raw_text_when_json_is_malformed(monkeypatch):

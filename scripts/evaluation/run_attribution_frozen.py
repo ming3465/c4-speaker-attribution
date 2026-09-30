@@ -75,6 +75,9 @@ FIELDS = [
 ]
 PROGRESS_EVERY = 25
 EXIT_INVARIANTS, EXIT_ARGS, EXIT_GATE = 1, 2, 3
+# Deliberately pessimistic: English prose runs about 4 chars per token, so
+# dividing by 3 over-counts and the warning fires before anything is truncated.
+CHARS_PER_TOKEN = 3
 
 
 def parse_args() -> argparse.Namespace:
@@ -101,6 +104,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--reader", choices=("ollama", "stub"), default="ollama")
     p.add_argument("--model", default="qwen2.5:7b")
     p.add_argument("--ollama-url", default=DEFAULT_BASE_URL, help="Point at a remote GPU box for larger models.")
+    p.add_argument("--num-ctx", type=int, default=8192,
+                   help="Reader context window. Ollama defaults to 4096 and truncates longer prompts "
+                        "silently from the left, taking the instructions and roster with them. "
+                        "--controls reports the longest prompt; raise this if it warns.")
     p.add_argument("--gate-margin", type=float, default=DEFAULT_MARGIN,
                    help="Required lower-CI lift over chance at budget 1.0. Declare before running.")
     p.add_argument("--skip-gate", action="store_true", help="Sweep even without headroom (explicit override).")
@@ -185,7 +192,7 @@ def plan(probes, stores, budgets, swap_budgets, scope, seed):
     return gate, rest
 
 
-def controls(jobs) -> int:
+def controls(jobs, num_ctx: int = 0) -> int:
     violations = [(j.probe.probe_id, j.budget, j.condition, v) for j in jobs for v in check_probe(j)]
     by_cell: dict = {}
     for j in jobs:
@@ -197,7 +204,13 @@ def controls(jobs) -> int:
         turn = sum(turn_taking_baseline(j) for j in group) / len(group)
         words = sum(len(j.target_text.split()) for j in group) / len(group)
         print(f"{cond:<6}{budget:>7}{len(group):>8}{chance:>9.3f}{freq:>8.3f}{turn:>8.3f}{words:>14.1f}")
-    print(f"\ninvariant violations: {len(violations)}")
+    longest = max(len(j.prompt()) for j in jobs)
+    estimate = longest // CHARS_PER_TOKEN
+    print(f"\nlongest prompt: {longest} chars, at most ~{estimate} tokens")
+    if num_ctx and estimate > num_ctx:
+        print(f"  WARNING: that is over --num-ctx {num_ctx}. Ollama truncates from the left, "
+              f"dropping the instructions and the roster. Raise --num-ctx.")
+    print(f"invariant violations: {len(violations)}")
     for v in violations[:10]:
         print("  ", v)
     return EXIT_INVARIANTS if violations else 0
@@ -291,13 +304,14 @@ def main() -> int:
     print(f"{len(probes)} frozen probes from {len({p.qid for p in probes})} contexts, "
           f"{len({p.cluster_id for p in probes})} clusters")
 
-    code = controls(gate_jobs + sweep_jobs)
+    code = controls(gate_jobs + sweep_jobs, args.num_ctx)
     if args.controls or code:
         return code
 
     tag = run_tag(args)
     out = args.out_dir / f"attribution_frozen_{tag}.csv"
-    reader = StubReader() if args.reader == "stub" else OllamaHTTPReader(args.model, args.ollama_url)
+    reader = (StubReader() if args.reader == "stub"
+              else OllamaHTTPReader(args.model, args.ollama_url, num_ctx=args.num_ctx))
     digest = ""
     if args.reader == "ollama":
         try:
