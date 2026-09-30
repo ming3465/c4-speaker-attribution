@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<nite:root nite:id="M1.A.words" xmlns:nite="http://nite.sourceforge.net/">
+   <w nite:id="M1.w.0" starttime="1.0" endtime="1.2" c="W">Hi</w>
+   <w nite:id="M1.w.1" starttime="1.2" endtime="1.2" c="CM">,</w>
+   <w nite:id="M1.w.2" starttime="1.2" endtime="1.4" c="W">I</w>
+   <w nite:id="M1.w.3" starttime="1.4" endtime="1.5" c="APOSS">&#39;m</w>
+   <w nite:id="M1.w.4" starttime="1.5" endtime="1.9" c="W">the</w>
+   <w nite:id="M1.w.5" starttime="1.9" endtime="2.3" c="W">manager</w>
+   <w nite:id="M1.w.6" starttime="2.3" endtime="2.3" c=".">.</w>
+   <vocalsound nite:id="M1.vocalsound.7" starttime="9.0" endtime="9.5" description="laugh"/>
+   <w nite:id="M1.w.8" starttime="9.5" endtime="9.8" c="W">So</w>
+   <disfmarker nite:id="M1.disfmarker.9" starttime="9.8" endtime="9.8"/>
+   <w nite:id="M1.w.10" starttime="9.8" endtime="10.2" c="W">budget</w>
+   <w nite:id="M1.w.11" starttime="10.2" endtime="10.5" c="W">first</w>
+   <nonvocalsound nite:id="M1.nonvocalsound.12" starttime="20.0" endtime="20.4" description="mike noise"/>
+</nite:root>

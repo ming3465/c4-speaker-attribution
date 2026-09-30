@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<nite:root nite:id="M1.A.segs" xmlns:nite="http://nite.sourceforge.net/">
+   <segment nite:id="M1.segment.1" starttime="0.9" endtime="2.4" participant="me001">
+      <nite:child href="M1.A.words.xml#id(M1.w.0)..id(M1.w.6)"/>
+   </segment>
+   <segment nite:id="M1.segment.5" starttime="8.9" endtime="10.6" participant="me001">
+      <nite:child href="M1.A.words.xml#id(M1.vocalsound.7)..id(M1.w.11)"/>
+   </segment>
+   <segment nite:id="M1.segment.9" starttime="19.9" endtime="20.5" participant="me001">
+      <nite:child href="M1.A.words.xml#id(M1.nonvocalsound.12)"/>
+   </segment>
+</nite:root>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<nite:root nite:id="M1.C.words" xmlns:nite="http://nite.sourceforge.net/">
+   <pause nite:id="M1.pause.30" starttime="5.9" endtime="6.0"/>
+   <w nite:id="M1.w.31" starttime="6.0" endtime="6.2" c="W">We</w>
+   <w nite:id="M1.w.32" starttime="6.2" endtime="6.4" c="TRUNCW">discu</w>
+   <w nite:id="M1.w.33" starttime="6.4" endtime="6.9" c="W">discussed</w>
+   <w nite:id="M1.w.34" starttime="6.9" endtime="7.0" c="LET">B</w>
+   <w nite:id="M1.w.35" starttime="7.0" endtime="7.0" c=".">.</w>
+   <comment nite:id="M1.comment.36" starttime="15.0" endtime="15.2" description="digits"/>
+</nite:root>

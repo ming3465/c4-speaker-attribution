@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?>
+<nite:root nite:id="M1.B.segs" xmlns:nite="http://nite.sourceforge.net/">
+   <segment nite:id="M1.segment.3" starttime="2.9" endtime="3.5" participant="fn002">
+      <nite:child href="M1.B.words.xml#id(M1.w.20)"/>
+   </segment>
+   <segment nite:id="M1.segment.7" starttime="11.9" endtime="12.8" participant="fn002">
+      <nite:child href="M1.B.words.xml#id(M1.w.21)..id(M1.w.23)"/>
+   </segment>
+</nite:root>
