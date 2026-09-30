@@ -101,6 +101,10 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--budgets", type=float, nargs="+", default=[1.0, 0.75, 0.5, 0.25, 0.1])
     p.add_argument("--swap-budgets", type=float, nargs="*", default=[1.0, 0.25, 0.1],
                    help="Budgets at which to also run the label-swap counterfactual.")
+    p.add_argument("--swap-only", action="store_true",
+                   help="Run the label-swap arm alone: only probes that have an equal-count partner, "
+                        "only --swap-budgets, both conditions. --limit then counts eligible probes, so "
+                        "the arm grows without re-running the full sweep. Needs its own --out-dir.")
     p.add_argument("--reader", choices=("ollama", "stub"), default="ollama")
     p.add_argument("--model", default="qwen2.5:7b")
     p.add_argument("--ollama-url", default=DEFAULT_BASE_URL, help="Point at a remote GPU box for larger models.")
@@ -123,6 +127,8 @@ def validate(args: argparse.Namespace) -> str | None:
         return "--dataset utterances needs --utterances pointing at an existing file"
     if args.contexts == "retrieval" and args.dataset != "groupmembench":
         return "--contexts retrieval needs questions; use --contexts window for utterance data"
+    if args.swap_only and not args.swap_budgets:
+        return "--swap-only needs at least one --swap-budgets value"
     return None
 
 
@@ -145,6 +151,8 @@ def run_tag(args: argparse.Namespace) -> str:
         parts.append(args.allocation)
     if args.compress_scope != "both":
         parts.append(f"scope-{args.compress_scope}")
+    if args.swap_only:
+        parts.append("swaponly")          # a different probe population: never the same CSV
     return "_".join(parts)
 
 
@@ -167,6 +175,11 @@ def build_probes(args, units, questions):
     # Deterministic shuffle: an interrupted run then leaves a random, still
     # fully paired, subsample rather than a category- or meeting-biased prefix.
     random.Random(f"{args.seed}:probe-order").shuffle(probes)
+    if args.swap_only:
+        # Filter after the shuffle, so --limit still takes a random subsample --
+        # of eligible probes this time. Only about a quarter qualify, which is
+        # why the arm is small when it rides along with a full sweep.
+        probes = [p for p in probes if swap_partner(p, seed=args.seed) is not None]
     return probes[: args.limit] if args.limit else probes
 
 
@@ -204,7 +217,7 @@ def controls(jobs, num_ctx: int = 0) -> int:
         turn = sum(turn_taking_baseline(j) for j in group) / len(group)
         words = sum(len(j.target_text.split()) for j in group) / len(group)
         print(f"{cond:<6}{budget:>7}{len(group):>8}{chance:>9.3f}{freq:>8.3f}{turn:>8.3f}{words:>14.1f}")
-    longest = max(len(j.prompt()) for j in jobs)
+    longest = max((len(j.prompt()) for j in jobs), default=0)
     estimate = longest // CHARS_PER_TOKEN
     print(f"\nlongest prompt: {longest} chars, at most ~{estimate} tokens")
     if num_ctx and estimate > num_ctx:
@@ -292,7 +305,10 @@ def main() -> int:
         print(problem, file=sys.stderr)
         return EXIT_ARGS
     started = utc_now()
-    budgets = sorted(set(args.budgets) | {1.0}, reverse=True)
+    # The swap arm only ever reads its own budgets; compressing the rest would
+    # be work nothing scores.
+    wanted = args.swap_budgets if args.swap_only else args.budgets
+    budgets = sorted(set(wanted) | {1.0}, reverse=True)
     units, questions, dataset_files = load_data(args)
     idf = corpus_idf(units)     # for the lexical attributor column
     probes = build_probes(args, units, questions)
@@ -303,6 +319,10 @@ def main() -> int:
     gate_jobs, sweep_jobs = plan(probes, stores, budgets, set(args.swap_budgets), args.compress_scope, args.seed)
     print(f"{len(probes)} frozen probes from {len({p.qid for p in probes})} contexts, "
           f"{len({p.cluster_id for p in probes})} clusters")
+    if args.swap_only and not probes:
+        print("--swap-only: no probe has a speaker with an equal visible label count, so there is no "
+              "counterfactual to run. Widen --window-size, or drop --swap-only.", file=sys.stderr)
+        return EXIT_ARGS
 
     code = controls(gate_jobs + sweep_jobs, args.num_ctx)
     if args.controls or code:
