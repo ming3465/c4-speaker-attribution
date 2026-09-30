@@ -1,0 +1,7 @@
+{"id": "c1__0_001", "conversation_id": "c1", "speaker": "derek_l_shaffer", "reply_to": "c1__0_000", "text": "Mr. Chief Justice, and may it\nplease the Court.", "meta": {"speaker_type": "A", "start_times": [6.8]}}
+{"id": "c1__0_000", "conversation_id": "c1", "speaker": "j__john_g_roberts_jr", "reply_to": null, "text": "We'll hear argument next in Case 18-877.", "meta": {"speaker_type": "J", "start_times": [0.0]}}
+{"id": "c1__1_000", "conversation_id": "c1", "speaker": "j__elena_kagan", "reply_to": null, "text": "That is the patent decision.", "meta": {"speaker_type": "J", "start_times": [1.5]}}
+{"id": "c1__1_001", "conversation_id": "c1", "speaker": "derek_l_shaffer", "reply_to": "c1__1_000", "text": "   ", "meta": {"speaker_type": "A", "start_times": [9.9]}}
+{"id": "c1__1_002", "conversation_id": "c1", "speaker": "ryan_park", "reply_to": null, "text": "We disagree.", "meta": {"speaker_type": "A", "start_times": [12.0]}}
+{"id": "c2__0_000", "conversation_id": "c2", "speaker": "j__elena_kagan", "reply_to": null, "text": "A second argument entirely.", "meta": {"speaker_type": "J", "start_times": [0.0]}}
+{"id": "c2__0_001", "conversation_id": "c2", "speaker": "ryan_park", "reply_to": "c2__0_000", "text": "Yes, Your Honor.", "meta": {"speaker_type": "A", "start_times": [4.0]}}
