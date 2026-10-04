@@ -250,3 +250,35 @@ These are reported against the rules above. Rendered tables are in
     small (n = 36 and n = 13) to read.
 - **Errors and exclusions:** no reader errors and no invalid answers in
   5,634 rows.
+
+## Results, `qwen2.5:32b` (2026-10-04)
+
+Run on a rented A40, against the *More readers* clause registered above, so
+this is not a deviation. Rendered tables are in
+`results/comparisons/attribution_v2/`.
+
+- **Headroom gate: PASS.** 42.3% [39.4, 45.3] against 27.6% chance — a lift of
+  **+14.7 pts [+11.9, +17.7]** — and a lead of +7.7 pts (lower bound +4.7) over
+  the frequency heuristic at 34.6%. Stronger headroom than the 14B on both
+  tests. **This is the second passing reader the main study said it lacked.**
+- **Primary outcome** (paired 1.0 → 0.1): **−9.3 pts [−12.1, −6.5]**, 204 lost
+  / 92 gained, McNemar p = 6.6 × 10⁻¹¹. Reading: **effect**.
+- **The 14B result replicates almost exactly.** 14B lost −9.2 pts
+  [−12.3, −6.0]; 32B loses −9.3 pts [−12.1, −6.5]. A reader with more headroom
+  to lose loses the same amount, which is the direct answer to the obvious
+  objection that the main result is an artefact of a reader that was barely
+  above chance to begin with.
+- **Secondary outcomes.** −5.6 pts [−7.8, −3.2] at 0.5 and −8.1 pts
+  [−10.7, −5.5] at 0.25; both read as effects. At 0.1 the 32B sits at 33.0%,
+  **below the 34.6% frequency shortcut** — the same crossing the 14B showed at
+  31.2%, so neither reader keeps a content-based advantage at a tenth of the
+  words.
+- **Label swap**, 278 probes: binding index +5.0 pts [−3.0, +13.2]
+  uncompressed, falling to −3.6 pts [−11.8, +4.2] at 0.1. Inconclusive at this
+  sample size, exactly as for the 14B (+5.4 pts [−3.2, +14.4]); this is the
+  estimate the `--swap-only` arm exists to settle.
+- **Errors and exclusions:** no reader errors, no invalid answers, 100% valid
+  across 5,634 rows.
+- **Provenance:** git `dc8da1d`, clean; `qwen2.5:32b` digest `9f13ba1299af`;
+  `data/processed/ami.jsonl` sha256 `f15cc2fa6db2…`, unchanged from the
+  registered value; Python 3.13.12, `PYTHONHASHSEED=0`.
