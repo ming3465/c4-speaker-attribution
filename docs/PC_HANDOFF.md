@@ -38,16 +38,49 @@ The main result is done, committed and written up.
 
 ## 2. The plan: all model runs on one A40
 
-**GPU.** A40, 48 GB, Secure Cloud, $0.49/hr. Checked live on 2026-09-30:
-stock was Low, in Montreal (CA-MTL-1). The L4 was sold out.
+**GPU.** A40, 48 GB, Secure Cloud, **$0.49/hr**. Re-read live on 2026-10-05:
+availability `LOW` in CA-MTL-1 and EU-SE-1, the only two data centers that
+carry it. Community Cloud lists $0.35/hr but availability is `NONE`, so Secure
+is the only option.
+
+**Storage: a host-local persistent mount, not a network volume.** CA-MTL-1 and
+EU-SE-1 both report `networkVolumeTypes: []` — neither supports network volumes
+at all, so the A40 cannot have one. `/workspace` is instead `mounts.persistent`,
+host-local storage available on any GPU pod. It survives stop/start but **not
+pod termination or a host failure**, and Runpod marks it deprecated for data you
+cannot recreate. The one artifact that is expensive to regenerate is the summary
+cache (43,704 summaries, several GPU-hours), so **copy the cache and the CSVs
+down after every job**, not just at the end.
+
+**Why not a GPU that can take a network volume.** Every chip with at least
+32 GB in a volume-capable data center costs far more, and 25–30 h of it does not
+fit the credit: RTX PRO 4500 32 GB $0.72/hr (EU-RO-1), RTX 4090 24 GB $0.74/hr,
+RTX 5090 32 GB $0.99/hr, PRO 6000 MIG 48 GB $1.09/hr (US-NE-1), RTX PRO 6000
+96 GB $2.09/hr. The A40 at $0.49/hr is the only one inside budget. L40S is
+$1.09/hr on Secure, not the $0.79 quoted earlier — that is its Community price,
+and none of its data centers takes a volume either.
+
+**Context fits.** `qwen2.5:32b` q4 is about 20 GB and a 16,384-token KV cache
+about 4 GB, so the Supreme Court and ELITR runs at `NUM_CTX=16384` sit near
+25 GB of the A40's 48 GB.
 
 **Budget.**
 
 - The credit is about $15 ($10 loaded, plus an expected $5 referral bonus).
-  Check it under runpod.io → Billing; Runpod's tools cannot read the balance.
-- The full plan costs about $13–15, which leaves no room for reruns. **All
-  jobs, including job 6, are kept.** Add about $5 of credit as a buffer before
-  renting.
+  Check it under runpod.io → Billing. Runpod's tools report **spend**, not
+  balance — `list-billing` showed $0.00 across the last 7 days, which confirms
+  nothing has been charged yet but says nothing about what is available.
+- **The gates cap the spend.** Jobs 3–5 are the expensive ones and the likeliest
+  to fail their headroom gate, and a failed gate stops before the sweep:
+
+  | Outcome | Jobs 3–5 | Campaign total |
+  | --- | ---: | ---: |
+  | All six gates fail | ~$2.50 | **≈ $8** |
+  | All six gates pass | ~$8.10 | **≈ $14** |
+
+  Either way the two AMI jobs — the highest-value ones — come first and cost
+  about $4.40 combined. Still add ~$5 of buffer before renting: $14 against $15
+  leaves nothing for a rerun.
 
 **Order.** The most important results come first. All times are estimates;
 the speed test gives the real figure.
@@ -155,17 +188,39 @@ and the full suite must stay green.
    claude plugin install runpod@runpod
    ```
 
-   Then run `/reload-plugins`, then `/mcp` → **runpod** → **Sign in with
-   Runpod**. It signs in with OAuth, so no API key is created.
-2. Add the PC's SSH public key under Runpod → Settings → SSH Public Keys. If
-   the PC has no key, create one with `ssh-keygen -t ed25519`.
-3. Create the pod:
-   - **1× A40**, Secure Cloud;
-   - the **Runpod PyTorch** template;
-   - a **100 GB volume mounted at `/workspace`**;
-   - **TCP port 22** exposed.
+   Then `/reload-plugins`, then `/mcp` → **runpod** → **Sign in with Runpod**.
 
-   Claude states the hourly price before creating it.
+2. **The OAuth sign-in is only half the setup.** It authenticates the MCP
+   tools, which manage infrastructure and nothing else — they do no SSH, no
+   file transfer, no interactive terminals. This campaign needs all three, so
+   it also needs `runpodctl` and a real API key:
+
+   ```bash
+   curl -sSL https://cli.runpod.net | bash          # runpodctl
+   export RUNPOD_API_KEY=…                          # console.runpod.io/user/settings
+   runpodctl user                                   # succeeds => key is valid
+   ```
+
+   One key authenticates runpodctl, flash and the MCP alike.
+
+3. **Register an SSH key — `startSsh` is a no-op without one.** The account has
+   none registered (`get-ssh-keys` returned `{"keys": []}`), and a pod created
+   with `startSsh` but no registered key simply has no SSH access.
+
+   ```bash
+   ssh-keygen -t ed25519                            # none exists on this PC
+   runpodctl ssh add-key                            # or paste into Runpod → Settings
+   ```
+
+4. Create the pod — **1× A40**, Secure Cloud, `templateId` `runpod-torch-v280`
+   (Runpod PyTorch 2.8.0; it allows CUDA 13.0, which is the only version the
+   A40 currently reports available), `mounts.persistent` of **100 GB at
+   `/workspace`**, ports `8888/http,22/tcp`, `startSsh: true`, and
+   `dataCenterIds: ["CA-MTL-1"]`.
+
+   Claude states the hourly price before creating it. **Stock is `LOW`** in
+   both A40 data centers, so creation can fail: retry, then try EU-SE-1. Do not
+   silently substitute a different GPU — every alternative changes the budget.
 
 ## 6. Run the jobs on the pod
 
