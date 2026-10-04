@@ -59,6 +59,15 @@ unpack() {  # unpack <zip> <dir>; the PyTorch image does not always carry unzip
     fi
 }
 
+# Minimal images carry neither git nor Ollama's prerequisites. lshw and zstd
+# are what its installer uses to detect the GPU, so without them it silently
+# falls back to CPU. Guarded so a resumed run skips the apt work.
+if ! command -v ollama >/dev/null || ! command -v git >/dev/null; then
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -qq curl git python3 unzip lshw zstd
+fi
+
 command -v ollama >/dev/null || curl -fsSL https://ollama.com/install.sh | sh
 if ! pgrep -x ollama >/dev/null; then
     nohup ollama serve >"$WORK/ollama.log" 2>&1 &
@@ -70,7 +79,11 @@ if [ "$JOB" = summary ]; then ollama pull "$SUMMARIZER"; fi
 [ -d c4-speaker-attribution ] || git clone -q "$REPO"
 cd c4-speaker-attribution
 git pull -q --ff-only
-command -v uv >/dev/null || pip install -q uv
+# Prefer uv's own installer: a minimal image may have no pip at all.
+if ! command -v uv >/dev/null; then
+    curl -fsSL https://astral.sh/uv/install.sh | sh || pip install -q uv
+    export PATH="$HOME/.local/bin:$PATH"
+fi
 uv sync -q
 
 UTTERANCES="data/processed/$DATASET.jsonl"
