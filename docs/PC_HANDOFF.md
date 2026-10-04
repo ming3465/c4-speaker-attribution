@@ -67,9 +67,10 @@ about 4 GB, so the Supreme Court and ELITR runs at `NUM_CTX=16384` sit near
 **Budget.**
 
 - The credit is about $15 ($10 loaded, plus an expected $5 referral bonus).
-  Check it under runpod.io → Billing. Runpod's tools report **spend**, not
-  balance — `list-billing` showed $0.00 across the last 7 days, which confirms
-  nothing has been charged yet but says nothing about what is available.
+  `runpodctl user` reads it directly: on 2026-10-05 `clientBalance` was
+  **$15.00** with `currentSpendPerHr` 0 and a spend limit of $80. (The MCP's
+  `list-billing` reports spend rather than balance — $0.00 over the last 7
+  days — so use the CLI for the balance.)
 - **The gates cap the spend.** Jobs 3–5 are the expensive ones and the likeliest
   to fail their headroom gate, and a failed gate stops before the sweep:
 
