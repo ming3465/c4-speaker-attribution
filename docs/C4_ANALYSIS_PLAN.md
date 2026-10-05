@@ -251,6 +251,63 @@ These are reported against the rules above. Rendered tables are in
 - **Errors and exclusions:** no reader errors and no invalid answers in
   5,634 rows.
 
+## Results, LLM-summary compressor (2026-10-05)
+
+`qwen2.5:7b` wrote the summaries, `qwen2.5:14b` read them, on the same 1,200
+frozen probes and the same budgets. Registered under *Deviations* above.
+36,501 summaries generated, **17,704 of them (48.5%) clipped** to their word
+budget.
+
+- **Headroom gate: PASS.** 40.5% [37.2, 43.8], lift +12.9 pts [+9.7, +16.2].
+  At budget 1.0 this compressor is the identity, so this is the same text the
+  word-drop run showed the same reader, and **40.5% against that run's 40.4%
+  is an internal consistency check** — the 0.1 pt gap is Ollama's
+  non-determinism at temperature 0.
+- **Primary outcome** (paired 1.0 → 0.1): **−7.9 pts [−11.3, −4.5]**,
+  245 lost / 150 gained, McNemar p = 2.0 × 10⁻⁶. Reading: **effect**.
+- **Secondary outcomes.** −5.2 pts [−8.3, −2.2] at 0.5 and −8.5 pts
+  [−11.5, −5.4] at 0.25; both effects. Accuracy is flat from 0.25 to 0.1
+  (32.0%, 32.6%), both at or below the 34.6% frequency shortcut.
+- **Label swap**, 278 probes: +6.5 pts [−2.6, +15.9] uncompressed, decaying to
+  +0.4 pts [−8.1, +8.2] at 0.1. Inconclusive, as in both word-drop arms.
+
+### The budgets are only matched at 1.0 and 0.1
+
+The two compressors were designed to share one word rule, but the summarizer
+undershoots it: `cap_words` clips a summary that runs long and nothing pads one
+that comes in short, and a 7B model asked for "at most k words" often returns
+fewer.
+
+| Budget | Word-drop, realised | Summary, realised |
+| ---: | ---: | ---: |
+| 1.0 | 28.4 | 28.4 |
+| 0.5 | 14.2 | **9.0** |
+| 0.25 | 7.1 | **5.8** |
+| 0.1 | 2.9 | **2.7** |
+
+So the two arms are **not** comparable at 0.5 and 0.25 — the summary arm
+compressed 37% and 18% harder than nominal there, and its larger loss at those
+budgets is partly just less text.
+
+**The comparison that holds is at budget 0.1**, where realised length is 2.7
+words against 2.9. There, the same reader loses **−9.2 pts [−12.3, −6.0]** to
+word-dropping and **−7.9 pts [−11.3, −4.5]** to LLM summarisation. The
+intervals overlap heavily, so this design detects no difference between the two
+compressors at matched realised length: **a realistic LLM summarizer destroys
+who-said-what about as much as naive word-dropping**, which is the practically
+important version of the claim.
+
+Reporting this as "matched word budgets" at 0.5 and 0.25 would overstate the
+design. Fixing it properly needs a length-targeted summarizer (resample until
+the summary lands within a tolerance of k), which is a change to the
+instrument, not an analysis choice.
+
+- **Errors and exclusions:** no reader errors, no invalid answers, 100% valid
+  across 5,634 rows.
+- **Provenance:** git `86f2200`; `qwen2.5:14b` digest `7cdf5a0187d5`;
+  summarizer `qwen2.5:7b`; AMI sha256 `f15cc2fa6db2…`; Python 3.13.12,
+  `PYTHONHASHSEED=0`.
+
 ## Results, `qwen2.5:32b` (2026-10-04)
 
 Run on a rented A40, against the *More readers* clause registered above, so
