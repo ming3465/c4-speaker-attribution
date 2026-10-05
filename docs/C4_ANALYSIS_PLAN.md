@@ -269,10 +269,10 @@ readers cleared it on the long-turn corpora.
 
 ### Supreme Court: the largest effect in the study
 
-| Reader | 1.0 → 0.1 | McNemar p | At 0.1, lift over chance |
-| --- | --- | ---: | --- |
-| 32B | **−37.4 pts [−40.9, −33.9]** | 1 × 10⁻⁷⁶ | **+1.3 pts [−1.4, +4.1]** |
-| 14B | **−28.3 pts [−31.6, −25.1]** | 2 × 10⁻⁵³ | +6.5 pts [+3.9, +9.2] |
+| Reader | Paired n | 1.0 → 0.1 | McNemar p | At 0.1, lift over chance |
+| --- | ---: | --- | ---: | --- |
+| 32B | 1,095 | **−36.9 pts [−40.4, −33.3]** | 5 × 10⁻⁷⁸ | **+1.4 pts [−1.3, +4.1]** |
+| 14B | 1,200 | **−28.2 pts [−31.5, −25.1]** | 1 × 10⁻⁵³ | +6.5 pts [+3.9, +9.2] |
 
 Three to four times the AMI effect, on the corpus chosen for long, distinctive
 turns (62.7 target words against AMI's 28.4). **At a tenth of the words the 32B
@@ -316,22 +316,36 @@ turn-taking rises to 35.3%, so the arm is gated on a harder heuristic than the
 main design. **The binding index remains unsettled**, and a bigger arm alone
 will not settle it.
 
-### Two Supreme Court runs are incomplete
+### The 32B Supreme run dies mid-sweep, reproducibly
 
-Both Supreme runs stopped mid-sweep and their manifests read `running`, not
-`complete`:
+`qwen2.5:14b` on Supreme Court is **complete**: 5,562 rows, paired n = 1,200.
 
-| Run | Probes at 1.0 | Probes at compressed budgets |
-| --- | ---: | ---: |
-| Supreme, 14B | 1,200 | 1,195 |
-| Supreme, 32B | 1,198 | 1,047 |
+`qwen2.5:32b` is **not**. Its manifest still reads `running` at 5,200 rows,
+paired n = 1,095. It was resumed twice onto fresh pods — the dataset hashes
+identically (`2e3d0f5318af…`), so finished rows are skipped correctly — and it
+died mid-sweep each time, at 1,047 and then 1,097 probes.
 
-The estimates above are computed on those paired subsets. Because probe order
-is a deterministic shuffle, an interrupted run leaves a **random, fully paired**
-subsample rather than a biased prefix, so the estimates are valid at the stated
-n — but the provenance says `running` and they should be finished before
-anyone submits them. Two reader errors (both `TimeoutError`, both at budget
-1.0) were recorded and dropped, out of 5,017 rows.
+The failure has no error trail: 2 reader errors in 5,200 rows, both
+`TimeoutError` at exactly the client's 180 s cap, both at budget 1.0, and
+latencies in the final rows are ordinary (1.93, 0.90, 1.21 s) right up to the
+last one written. An abrupt stop with no exception and no slow-down is
+consistent with the process being **killed from outside — most likely OOM** —
+rather than crashing. `plan()` materialises every rendered job up front, and
+Supreme Court's 20-turn windows of 62.7-word turns are by far the largest text
+this instrument has held. That is a hypothesis, not a diagnosis: the pod was
+terminated before it could be confirmed, and confirming it needs a run with
+memory instrumentation.
+
+**The estimate is still valid at its stated n.** Probe order is a deterministic
+shuffle, so an interrupted run leaves a random, fully paired subsample rather
+than a biased prefix — a designed property of the runner. Reporting it needs
+the n stated and the `running` status disclosed, which is what this section
+does. The conclusion does not turn on the missing 105 probes: −36.9 pts
+[−40.4, −33.3] is not a result that 9% more data overturns.
+
+**For the next session:** before re-running 32B on Supreme Court, either stream
+the job list instead of materialising it, or run with a memory limit and a
+`dmesg` check so the kill is confirmed rather than inferred.
 
 ## Results, LLM-summary compressor (2026-10-05)
 
