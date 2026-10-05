@@ -251,6 +251,88 @@ These are reported against the rules above. Rendered tables are in
 - **Errors and exclusions:** no reader errors and no invalid answers in
   5,634 rows.
 
+## Results, the three new corpora (2026-10-05)
+
+All seven runs used the registered design unchanged. **Four of the seven gates
+passed**, against the expectation recorded in `docs/PC_HANDOFF.md` that the
+stronger label-only shortcuts would mostly block them. They raised the bar; the
+readers cleared it on the long-turn corpora.
+
+| Corpus | Reader | Uncompressed | Best shortcut | Lead (lower bound) | Gate |
+| --- | --- | ---: | ---: | ---: | --- |
+| Supreme Court | 32B | 62.5% | 42.6% | +19.8 (+16.6) | **pass** |
+| Supreme Court | 14B | 58.4% | 42.6% | +15.8 (+12.3) | **pass** |
+| ICSI | 32B | 61.1% | 55.2% | +5.9 (+3.0) | **pass** |
+| ICSI | 14B | 58.4% | 55.2% | +3.2 (−0.3) | fail |
+| ELITR | 32B | 52.8% | 54.9% | −2.2 (−6.0) | fail |
+| ELITR | 14B | 47.2% | 54.9% | −7.8 (−11.9) | fail |
+
+### Supreme Court: the largest effect in the study
+
+| Reader | 1.0 → 0.1 | McNemar p | At 0.1, lift over chance |
+| --- | --- | ---: | --- |
+| 32B | **−37.4 pts [−40.9, −33.9]** | 1 × 10⁻⁷⁶ | **+1.3 pts [−1.4, +4.1]** |
+| 14B | **−28.3 pts [−31.6, −25.1]** | 2 × 10⁻⁵³ | +6.5 pts [+3.9, +9.2] |
+
+Three to four times the AMI effect, on the corpus chosen for long, distinctive
+turns (62.7 target words against AMI's 28.4). **At a tenth of the words the 32B
+reader's lift over chance has a 95% interval that includes zero** — it has gone
+from +38.8 pts to statistically indistinguishable from guessing. Both readers
+end far below the 42.6% frequency shortcut, at 30.2% and 25.0%.
+
+This is the cleanest statement the study can make: where there is the most
+speaker evidence to destroy, compression destroys the most.
+
+### ICSI: passes with the 32B, small effect
+
+61.1% → 54.2%, a change of **−6.9 pts [−9.4, −4.5]**, McNemar p = 4 × 10⁻⁷.
+Targets are short here (15.2 words), which plausibly caps how much there is to
+lose. At 0.1 the reader sits at 54.2%, **below its own 55.2% frequency
+shortcut** — the same crossing AMI shows.
+
+The 14B missed by a hair: a +3.2 pt lead over the frequency shortcut with a
+lower bound of −0.003. It failed, and it is reported as a failure.
+
+### ELITR: fails with both readers
+
+47.2% and 52.8% against a turn-taking shortcut of 54.9%. Neither reader beats
+it, so no sweep ran. The cause was recorded before the run: the converter makes
+one utterance per speaker marker, so adjacent turns always have different
+speakers and "not the neighbours" becomes genuinely informative. **ELITR as
+converted cannot support a speaker-attribution claim**, and that is the result.
+
+### The bigger label-swap arm also failed its gate
+
+`--swap-only` reached 1,000 eligible probes against the 278 the ride-along arm
+manages, as designed. On that subpopulation the 14B scored 36.1% against a
+turn-taking shortcut of 35.3% — a lead of +0.8 pts, lower bound −3.4 — so the
+gate failed and no swap sweep ran.
+
+This is the decision recorded above being honoured: the swap-eligible probes
+are a different population and the gate is re-read on them. The structure is
+worth noting — selecting probes whose author has an equal-count partner
+collapses the frequency shortcut from 34.6% to 18.1% by construction, while
+turn-taking rises to 35.3%, so the arm is gated on a harder heuristic than the
+main design. **The binding index remains unsettled**, and a bigger arm alone
+will not settle it.
+
+### Two Supreme Court runs are incomplete
+
+Both Supreme runs stopped mid-sweep and their manifests read `running`, not
+`complete`:
+
+| Run | Probes at 1.0 | Probes at compressed budgets |
+| --- | ---: | ---: |
+| Supreme, 14B | 1,200 | 1,195 |
+| Supreme, 32B | 1,198 | 1,047 |
+
+The estimates above are computed on those paired subsets. Because probe order
+is a deterministic shuffle, an interrupted run leaves a **random, fully paired**
+subsample rather than a biased prefix, so the estimates are valid at the stated
+n — but the provenance says `running` and they should be finished before
+anyone submits them. Two reader errors (both `TimeoutError`, both at budget
+1.0) were recorded and dropped, out of 5,017 rows.
+
 ## Results, LLM-summary compressor (2026-10-05)
 
 `qwen2.5:7b` wrote the summaries, `qwen2.5:14b` read them, on the same 1,200
