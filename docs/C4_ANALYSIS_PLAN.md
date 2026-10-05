@@ -222,6 +222,67 @@ tokens, and ICSI's at 936. The fix matters for the new corpora, where 6 of
 `--controls` now reports the longest prompt and warns when it will not fit.
 
 
+### 2026-10-05, a swap arm on Supreme Court
+
+Registered before the run. The AMI swap arm failed its gate, and the cause is
+specific to AMI rather than to the swap design: the gate is re-read on the
+swap-eligible subpopulation, and on AMI that subset is hard. Measured on
+existing rows, with no new model calls:
+
+| Corpus | Reader on swap-eligible | Best shortcut there | Lead |
+| --- | ---: | ---: | ---: |
+| AMI, 32B | 33.1% | 35.9% | −2.8 pts (the failure) |
+| ICSI, 32B | 33.9% | 19.9% | +14.0 pts |
+| Supreme Court, 14B | 47.6% | 27.9% | +19.8 pts |
+| Supreme Court, 32B | 54.2% | 28.0% | +26.3 pts |
+
+Selecting probes whose author has an equal-count partner collapses the
+frequency shortcut by construction, so the arm is gated on turn-taking. On AMI
+turn-taking *rises* on that subset (33.8% → 35.9%) while the reader falls
+(42.3% → 33.1%). On Supreme Court the reader holds 54.2% against 28.0%.
+
+So the binding index is run again on **Supreme Court with `qwen2.5:32b`**,
+`--swap-only --limit 1000` at the registered swap budgets (1.0, 0.25, 0.1).
+Supreme Court has 12,244 swap-eligible probes, so the limit is a random
+subsample under the same seed-0 shuffle, not a different construction.
+
+The gate still applies and is still read first. If it fails here too, that is
+the result and the binding index stays open. Reported as a secondary,
+exploratory outcome, as the swap arm always has been.
+
+### 2026-10-05, a word-drop arm at matched realised length
+
+Registered before the run. The summary arm undershoots its nominal budget, so
+the two compressors are only comparable at 1.0 and 0.1. Rather than change the
+summarizer, the word-drop arm is re-run at budgets chosen so its **realised**
+length matches the summarizer's. The budgets were picked with `--controls`,
+which needs no model calls, and before any reader saw them:
+
+| Word-drop budget | Realised words | Matches the summary arm at |
+| ---: | ---: | --- |
+| 0.32 | 9.1 | 0.5 (9.0 words) |
+| 0.20 | 5.7 | 0.25 (5.8 words) |
+
+Run on AMI with `qwen2.5:14b` — the same reader as the summary arm, so the
+compressor is the only thing that varies — at `--budgets 1.0 0.32 0.20`, into
+its own `--out-dir`.
+
+The comparison is then stated by **realised length, not by nominal budget**,
+and that pairing is named wherever the numbers appear. This adds a comparison;
+it does not revise the registered budgets, and the original arms stand as
+reported.
+
+### 2026-10-05, finishing the 32B Supreme Court run
+
+The run is 362 rows short at `status: running`. It is resumed once more on a
+fresh pod; the dataset hashes identically, so finished rows are skipped. The
+earlier note calling the failure "most likely OOM" is weaker than it was
+written: the same run **completed once**, on the second pod, which a
+reproducible memory bound would not do. The cause is unknown and intermittent.
+
+If it fails a third time it is reported at n = 1,095 with `running` disclosed,
+and no further compute is spent on it.
+
 ## Results (2026-09-28)
 
 These are reported against the rules above. Rendered tables are in
