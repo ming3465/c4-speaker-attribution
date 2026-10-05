@@ -336,6 +336,96 @@ comparable in size to `qwen2.5:32b` and shares no lineage with it.
 It may fail the headroom gate, as `qwen2.5:7b` did. That is a result and is
 reported as one; no sweep follows a failed gate.
 
+## Results, the follow-up arms (2026-10-06)
+
+### The reader binds statements to their author's other lines, and compression destroys that
+
+The label-swap counterfactual, run on **Supreme Court with `qwen2.5:32b`**,
+1,000 eligible probes. Labels A↔B are swapped on the non-target messages;
+following the swap means the statement was bound to its author's other lines,
+answering the original author means a content prior survived the relabel.
+
+| Budget | Follows swap | Original author | **Binding index** | Chance |
+| ---: | ---: | ---: | --- | ---: |
+| 1.0 | 48.8% [45.6, 52.1] | 10.6% [8.7, 12.4] | **+38.2 pts [+34.2, +42.4]** | 20.7% |
+| 0.25 | 21.3% [19.1, 23.7] | 16.5% [14.2, 19.1] | +4.8 pts [+1.1, +8.5] | 20.7% |
+| 0.1 | 19.7% [17.4, 22.1] | 17.6% [15.0, 20.4] | +2.1 pts [−2.0, +6.0] | 20.7% |
+
+**This settles the estimate the study could not read.** On AMI the binding index
+was +5.4 pts [−3.2, +14.4] on 278 probes — inconclusive, and the reason the
+`--swap-only` option was built. On Supreme Court it is **+38.2 pts**, an
+interval nowhere near zero: the reader is overwhelmingly tracking *who else
+said things like this*, not a prior about the content.
+
+And compression destroys exactly that: +38.2 → +4.8 → **+2.1 [−2.0, +6.0]**, an
+interval containing zero. By a tenth of the words the statement is no longer
+bound to its author at all.
+
+### Where binding breaks: the prediction was wrong
+
+Registered prediction: binding needs the author's other lines, so the `context`
+arm should carry most of the loss. **It does not.** On AMI with `qwen2.5:32b`:
+
+| Arm | 1.0 → 0.5 | 1.0 → 0.25 | 1.0 → 0.1 |
+| --- | --- | --- | --- |
+| `both` | −5.6 [−7.8, −3.2] | −8.1 [−10.7, −5.5] | −9.3 [−12.1, −6.5] |
+| `context` only | −5.3 [−7.8, −2.9] | −8.9 [−11.3, −6.6] | −8.2 [−11.0, −5.5] |
+| `target` only | −4.9 [−7.1, −2.8] | −7.0 [−9.6, −4.5] | −9.1 [−11.4, −6.9] |
+
+Compressing **either side alone costs about as much as compressing both**, at
+every budget, with intervals overlapping throughout. The two do not add: 9.1 +
+8.2 is not 9.3.
+
+Two readings, and the second is more parsimonious:
+
+1. Attribution is a **matching operation** between the statement and the
+   author's other lines, so degrading either operand breaks the match and
+   degrading both cannot break it twice. The swap result above supports this:
+   the reader really is matching against the other lines.
+2. A **floor**. All three arms land at 33–34% at budget 0.1, against a 34.6%
+   frequency shortcut. Once any single intervention pushes the reader onto the
+   label-only floor, nothing further can be lost, so the arms cannot separate.
+
+The honest statement is that **this design cannot localise the damage**, and
+the registered prediction is refuted either way. Separating the two readings
+needs budgets that keep the reader above the shortcut — the 0.5 cells, where
+all three arms are also indistinguishable, suggest the matching reading, but
+not decisively.
+
+### A reader from a different family replicates it, larger
+
+`gemma2:27b` on AMI, registered design, reported separately and never pooled.
+
+| | Uncompressed | 1.0 → 0.1 |
+| --- | ---: | --- |
+| `gemma2:27b` | **45.8% [42.9, 48.7]** | **−13.8 pts [−16.7, −11.1]**, p = 2 × 10⁻¹⁷ |
+| `qwen2.5:32b` | 42.3% | −9.3 pts [−12.1, −6.5] |
+| `qwen2.5:14b` | 40.4% | −9.2 pts [−12.3, −6.0] |
+
+It **passes the gate** with a lift of +18.1 pts [+15.3, +21.0] — the best
+uncompressed reader on AMI — and loses *more* to compression than either qwen.
+At budget 0.1 it reaches 31.9%, below the 34.6% frequency shortcut, the same
+crossing both qwen readers show.
+
+**The result is not an artefact of one model family.** This was the most
+obvious objection to the study and it does not survive.
+
+### The compressors are indistinguishable at matched length
+
+Same reader (`qwen2.5:14b`), AMI, comparing by **realised** words rather than
+nominal budget:
+
+| Realised words | Word-drop | LLM summary |
+| ---: | --- | --- |
+| ~9 | −7.8 pts [−11.1, −4.7] | −5.2 pts [−8.3, −2.2] |
+| ~5.7 | −8.3 pts [−11.5, −5.2] | −8.5 pts [−11.5, −5.4] |
+| 2.9 / 2.7 | −9.2 pts [−12.3, −6.0] | −7.9 pts [−11.3, −4.5] |
+
+Intervals overlap heavily at all three lengths. **The budget-matching
+limitation is closed**: a realistic LLM summarizer destroys who-said-what about
+as much as naive word-dropping, and that now rests on three matched lengths
+rather than one.
+
 ## Results (2026-09-28)
 
 These are reported against the rules above. Rendered tables are in

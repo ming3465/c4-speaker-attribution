@@ -64,6 +64,14 @@ def label_of(path: Path) -> tuple[str, str, str]:
     return model, corpus, compressor
 
 
+def scope_of(path: Path) -> str:
+    """`run_tag` appends scope-<name> for anything but the default 'both'."""
+    for name in ("context", "target"):
+        if f"scope-{name}" in path.name:
+            return name
+    return "both"
+
+
 def load(paths: list[Path]) -> list[dict]:
     runs = []
     for path in sorted(paths):
@@ -72,8 +80,21 @@ def load(paths: list[Path]) -> list[dict]:
         if not data.get("main"):
             continue                      # gate-only run: no sweep to plot
         runs.append({"model": model, "corpus": corpus, "compressor": compressor,
+                     "scope": scope_of(path), "swap_only": "swaponly" in path.name,
                      "stem": path.name, **data})
     return runs
+
+
+def canonical(runs: list[dict]) -> list[dict]:
+    """The registered design only: full scope, not swap-only, all four budgets.
+
+    The scope arms and the matched-length arm are deliberately excluded — they
+    vary what the budget axis means, so putting them on a shared axis would
+    compare different things.
+    """
+    return [r for r in runs
+            if r["scope"] == "both" and not r["swap_only"]
+            and all(b in r["main"] for b in BUDGETS)]
 
 
 def series(run: dict, key: str) -> tuple[list[float], list[float], list[float], list[float]]:
@@ -95,7 +116,7 @@ def series(run: dict, key: str) -> tuple[list[float], list[float], list[float], 
 def dose_response(runs: list[dict], out: Path) -> Path | None:
     import matplotlib.pyplot as plt
 
-    ami = [r for r in runs if r["corpus"] == "AMI"]
+    ami = [r for r in canonical(runs) if r["corpus"] == "AMI"]
     if not ami:
         return None
     fig, ax = plt.subplots(figsize=(7.2, 4.4))
@@ -123,7 +144,7 @@ def dose_response(runs: list[dict], out: Path) -> Path | None:
 def cross_corpus(runs: list[dict], out: Path) -> Path | None:
     import matplotlib.pyplot as plt
 
-    drop = [r for r in runs if r["compressor"] == "word-drop" and r.get("paired")]
+    drop = [r for r in canonical(runs) if r["compressor"] == "word-drop" and r.get("paired")]
     if not drop:
         return None
     fig, ax = plt.subplots(figsize=(7.2, 4.4))
@@ -155,11 +176,54 @@ def cross_corpus(runs: list[dict], out: Path) -> Path | None:
     ax.set_xticks(range(len(BUDGETS)), BUDGETS)
     ax.set_xlabel("Compression budget (fraction of each statement's words kept)")
     ax.set_ylabel("Change in Hit@1 from uncompressed (pts)")
-    ax.set_title("The more speaker evidence a turn carries, the more compression destroys", fontsize=11)
+    # Deliberately descriptive. Splitting probes by target length *within* a
+    # corpus shows the target's own length explains very little of the loss, so
+    # a causal title about turn length would overclaim: the ordering is across
+    # corpora, which differ in more than their turns.
+    ax.set_title("Compression costs six times more on long-turn corpora than short-turn ones", fontsize=11)
     ax.legend(frameon=False, fontsize=8, loc="lower left")
     ax.spines[["top", "right"]].set_visible(False)
     fig.tight_layout()
     return save(fig, out / "cross_corpus")
+
+
+def scope_decomposition(runs: list[dict], out: Path) -> Path | None:
+    """Compressing either side alone costs about as much as compressing both."""
+    import matplotlib.pyplot as plt
+
+    arms = {r["scope"]: r for r in runs
+            if r["corpus"] == "AMI" and r["model"] == "qwen2.5:32b" and not r["swap_only"]
+            and all(b in r["main"] for b in BUDGETS)}
+    if len(arms) < 3:
+        return None
+    names = {"both": "both (statement + other lines)",
+             "context": "other lines only (statement intact)",
+             "target": "statement only (other lines intact)"}
+    fig, ax = plt.subplots(figsize=(7.2, 4.4))
+    ax.axhline(0, color="0.3", lw=1)
+    offsets = {"both": -0.06, "context": 0.0, "target": 0.06}
+    for (scope, colour) in (("both", "#1f4e9c"), ("context", "#c0392b"), ("target", "#2e7d57")):
+        run = arms[scope]
+        xs, point, lo, hi = [0], [0.0], [0.0], [0.0]
+        for i, budget in enumerate(BUDGETS[1:], start=1):
+            cell = run["paired"].get(budget)
+            if not cell:
+                continue
+            mid, low, high = cell["delta"]
+            xs.append(i)
+            point.append(mid * 100)
+            lo.append((mid - low) * 100)
+            hi.append((high - mid) * 100)
+        ax.errorbar([x + offsets[scope] for x in xs], point, yerr=[lo, hi], marker="o", ms=4,
+                    lw=1.8, capsize=3, color=colour, label=f"compress {names[scope]}")
+    ax.set_xticks(range(len(BUDGETS)), BUDGETS)
+    ax.set_xlabel("Compression budget (fraction of words kept)")
+    ax.set_ylabel("Change in Hit@1 from uncompressed (pts)")
+    ax.set_title("Damaging either side alone costs as much as damaging both", fontsize=11)
+    ax.legend(frameon=False, fontsize=8, loc="lower left")
+    ax.spines[["top", "right"]].set_visible(False)
+    fig.tight_layout()
+    return save(fig, out / "scope_decomposition")
 
 
 def save(fig, stem: Path) -> Path:
@@ -185,7 +249,8 @@ def main() -> int:
         print("every summary is gate-only; there is no sweep to plot", file=sys.stderr)
         return 2
 
-    written = [f for f in (dose_response(runs, args.out_dir), cross_corpus(runs, args.out_dir)) if f]
+    written = [f for f in (dose_response(runs, args.out_dir), cross_corpus(runs, args.out_dir),
+                           scope_decomposition(runs, args.out_dir)) if f]
     for path in written:
         print(f"wrote {path} (+ .pdf)")
     print(f"from {len(runs)} swept run(s): " + ", ".join(f"{r['corpus']}/{r['model']}/{r['compressor']}" for r in runs))

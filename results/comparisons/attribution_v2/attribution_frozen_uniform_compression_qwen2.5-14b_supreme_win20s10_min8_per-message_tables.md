@@ -1,15 +1,16 @@
 # C4 Pilot v2 — Compression-Induced Attribution Failure (frozen probes)
 
-1200 frozen probes from 1126 contexts in 169 clusters; 3878 graded rows. Dataset `utterances`, contexts `window`, compressor `salient`, scope `both`.
+1200 frozen probes from 1055 contexts in 192 clusters; 5562 graded rows. Dataset `utterances`, contexts `window`, compressor `salient`, scope `both`.
 Each probe is fixed once; only the text of the same messages is compressed at each budget. Roster = the speakers visible in the context, so chance = 1/|roster|. Cluster bootstrap by conversation/question, 2000 resamples. Full configuration under Provenance.
 
 ## Table 1 — attribution accuracy by budget
 
 | Budget | n | Target words | Hit@1 [95% CI] | Chance | Frequency heuristic | Turn-taking heuristic | Lexical attributor | Hit@1 − chance [95% CI] | Valid |
 | ---: | ---: | ---: | --- | ---: | ---: | ---: | ---: | --- | ---: |
-| 1.0 | 1200 | 28.4 | 41.4% [38.3, 44.6] | 27.6% | 34.6% | 33.8% | 48.8% | +13.8% [+10.6, +17.0] | 100% |
-| 0.32 | 1200 | 9.1 | 33.6% [31.1, 36.2] | 27.6% | 34.6% | 33.8% | 41.6% | +6.0% [+3.4, +8.5] | 100% |
-| 0.2 | 1200 | 5.7 | 33.1% [30.2, 35.9] | 27.6% | 34.6% | 33.8% | 37.6% | +5.5% [+2.7, +8.2] | 100% |
+| 1.0 | 1200 | 62.7 | 58.4% [55.7, 61.2] | 23.7% | 42.6% | 35.3% | 51.7% | +34.7% [+31.9, +37.5] | 100% |
+| 0.5 | 1200 | 31.3 | 41.8% [39.0, 44.7] | 23.7% | 42.6% | 35.3% | 50.0% | +18.1% [+15.2, +20.8] | 100% |
+| 0.25 | 1200 | 15.7 | 33.4% [30.9, 36.1] | 23.7% | 42.6% | 35.3% | 44.5% | +9.7% [+7.2, +12.2] | 100% |
+| 0.1 | 1200 | 6.3 | 30.2% [27.6, 32.9] | 23.7% | 42.6% | 35.3% | 38.8% | +6.4% [+3.9, +9.2] | 100% |
 
 *Frequency heuristic* = always answer the most frequently labelled visible speaker. Labels do not change with the budget, so it is constant; it is the non-binding strategy to beat.
 
@@ -19,19 +20,20 @@ Each probe is fixed once; only the text of the same messages is compressed at ea
 
 | Budget vs 1.0 | Paired n | Hit@1 at 1.0 | Hit@1 at b | Δ (b − 1.0) [95% CI] | Lost / gained | McNemar p |
 | ---: | ---: | ---: | ---: | --- | ---: | ---: |
-| 0.32 | 1200 | 41.4% | 33.6% | -7.8% [-11.1, -4.7] | 222 / 128 | 5.74e-07 |
-| 0.2 | 1200 | 41.4% | 33.1% | -8.3% [-11.5, -5.2] | 236 / 136 | 2.43e-07 |
+| 0.5 | 1200 | 58.4% | 41.8% | -16.6% [-19.7, -13.6] | 281 / 82 | 1.26e-26 |
+| 0.25 | 1200 | 58.4% | 33.4% | -25.0% [-28.2, -21.8] | 379 / 79 | 4.81e-48 |
+| 0.1 | 1200 | 58.4% | 30.2% | -28.2% [-31.5, -25.1] | 430 / 91 | 1.09e-53 |
 
 Lost = correct at 1.0, wrong at b. Gained = the reverse. McNemar is exact and two-sided on these counts.
 
 ## Table 3 — accuracy by number of speakers in the conversation
 
-| Speakers (roster) | Chance | b=1.0 | b=0.32 | b=0.2 |
-| ---: | ---: | ---: | ---: | ---: |
-| 2 | 50% | 58% (n=36) | 58% (n=36) | 39% (n=36) |
-| 3 | 33% | 44% (n=275) | 37% (n=275) | 37% (n=275) |
-| 4 | 25% | 40% (n=876) | 32% (n=876) | 31% (n=876) |
-| 5+ | 20% | 46% (n=13) | 38% (n=13) | 62% (n=13) |
+| Speakers (roster) | Chance | b=1.0 | b=0.5 | b=0.25 | b=0.1 |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 2 | 50% | 58% (n=43) | 56% (n=43) | 51% (n=43) | 47% (n=43) |
+| 3 | 33% | 61% (n=192) | 48% (n=192) | 40% (n=192) | 38% (n=192) |
+| 4 | 25% | 57% (n=338) | 41% (n=338) | 31% (n=338) | 25% (n=338) |
+| 5+ | 18% | 59% (n=627) | 39% (n=627) | 32% (n=627) | 30% (n=627) |
 
 ## Table 4 — label-swap counterfactual (binding vs prior)
 
@@ -39,22 +41,25 @@ Labels A ↔ B swapped on the non-target messages, with B chosen to have exactly
 
 | Budget | n | Follows swap (binding) [95% CI] | Original author (prior) [95% CI] | Binding index [95% CI] | Chance | Same probes, no swap |
 | ---: | ---: | --- | --- | --- | ---: | ---: |
-| 1.0 | 278 | 33.5% [27.7, 39.4] | 27.7% [22.9, 32.6] | +5.8% [-3.4, +15.2] | 26.1% | 33.5% |
+| 1.0 | 254 | 46.9% [40.9, 53.1] | 9.4% [6.0, 13.2] | +37.4% [+29.8, +44.9] | 20.7% | 47.6% |
+| 0.25 | 254 | 24.4% [19.2, 30.2] | 21.7% [16.9, 26.6] | +2.8% [-5.1, +10.8] | 20.7% | 28.0% |
+| 0.1 | 254 | 24.0% [19.3, 29.3] | 15.7% [11.0, 20.7] | +8.3% [+0.4, +16.4] | 20.7% | 24.8% |
 
 ## Table 5 — what the data can rule out
 
 | Comparison | n (clusters) | Estimate [95% CI] | 90% CI | Detectable at 80% power | Reading (margin ±5 pts) |
 | --- | ---: | --- | --- | ---: | --- |
-| Hit@1 − chance at b=1.0 | 1200 (169) | +13.8% [+10.6, +17.0] | [+11.1, +16.5] | 4.6 pts | effect |
-| Δ Hit@1, b=0.32 vs 1.0 | 1200 (169) | -7.8% [-11.1, -4.7] | [-10.5, -5.2] | 4.6 pts | effect |
-| Δ Hit@1, b=0.2 vs 1.0 | 1200 (169) | -8.3% [-11.5, -5.2] | [-11.0, -5.7] | 4.4 pts | effect |
+| Hit@1 − chance at b=1.0 | 1200 (192) | +34.7% [+31.9, +37.5] | [+32.4, +37.0] | 4.0 pts | effect |
+| Δ Hit@1, b=0.5 vs 1.0 | 1200 (192) | -16.6% [-19.7, -13.6] | [-19.2, -14.1] | 4.4 pts | effect |
+| Δ Hit@1, b=0.25 vs 1.0 | 1200 (192) | -25.0% [-28.2, -21.8] | [-27.7, -22.3] | 4.6 pts | effect |
+| Δ Hit@1, b=0.1 vs 1.0 | 1200 (192) | -28.2% [-31.5, -25.1] | [-31.0, -25.6] | 4.5 pts | effect |
 
 *Detectable at 80% power* = the smallest true effect this design finds 80% of the time at two-sided α = .05: (1.96 + 0.84) × cluster-bootstrap SE. Smaller true effects are likely to be missed. *Reading*: **effect** = the 95% CI excludes 0; **no effect beyond the margin** = the 90% CI lies inside ±margin (two one-sided tests, α = .05); **inconclusive** = neither, so the data cannot decide. The equivalence reading is valid only if the margin was fixed before the run.
 
 ## Provenance
 
-- Status `complete`, rows 3878, started 2026-10-05T17:37:32+00:00, finished 2026-10-05T18:04:19+00:00
-- Git `a558fb04f7b8e40b9fc1199ba3354bd2ebdfadcc`; Python 3.13.12; PYTHONHASHSEED=0
+- Status `complete`, rows 5562, started 2026-10-05T10:41:57+00:00, finished 2026-10-05T10:43:26+00:00
+- Git `f82a05cf9d35cd8161b7da81e43acfb3aaed8d54`; Python 3.13.12; PYTHONHASHSEED=0
 - Reader `qwen2.5:14b` digest `7cdf5a0187d5`
-- Dataset `data/processed/ami.jsonl` sha256 `f15cc2fa6db2`
-- Headroom gate **PASS**: lift +13.8 pts [+10.6, +17.0] vs margin +5.0; headroom confirmed
+- Dataset `data/processed/supreme.jsonl` sha256 `2e3d0f5318af`
+- Headroom gate **PASS**: lift +34.7 pts [+31.9, +37.5] vs margin +5.0; headroom confirmed
