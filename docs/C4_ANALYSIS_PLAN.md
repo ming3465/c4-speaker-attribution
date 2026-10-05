@@ -283,6 +283,59 @@ reproducible memory bound would not do. The cause is unknown and intermittent.
 If it fails a third time it is reported at n = 1,095 with `running` disclosed,
 and no further compute is spent on it.
 
+### 2026-10-06, where does binding actually break? (scope decomposition)
+
+Registered before the run. The study so far shows that compressing a window
+costs attribution, but not **what** the compression destroys. A free analysis
+of existing rows makes the gap concrete: splitting probes into target-length
+quartiles *within* each corpus shows the target's own length explains very
+little of the loss.
+
+| Run | Q1 shortest | Q4 longest |
+| --- | ---: | ---: |
+| Supreme Court, 32B | −35.4 pts (8–20 w) | −39.3 pts (78–628 w) |
+| Supreme Court, 14B | −23.7 pts (8–20 w) | −42.0 pts (80–628 w) |
+| AMI, 32B | −6.0 pts (8–12 w) | −11.7 pts (34–212 w) |
+| ICSI, 32B | −4.3 pts (8–10 w) | −9.3 pts (18–62 w) |
+
+Supreme Court probes whose target is 8–20 words lose **35 pts**; AMI probes of
+the same target length lose **6**. Same target length, six times the loss — so
+the cross-corpus difference is not the target's length, and the figure caption
+"the more speaker evidence a turn carries" must mean the *window*, not the
+probed statement.
+
+`run_attribution_frozen.py` already carries `--compress-scope`, unused in this
+study. Two further arms on AMI with `qwen2.5:32b`, at the registered budgets,
+against the existing `both` baseline:
+
+- **`--compress-scope target`** — compress only the hidden statement; the
+  author's other lines stay full length.
+- **`--compress-scope context`** — compress only the other lines; the statement
+  stays full length.
+
+**The prediction, stated before the runs:** binding needs the author's other
+lines, so the `context` arm should carry most of the loss and the `target` arm
+much less. If instead `target` dominates, what compression destroys is the
+statement's own content, not the speaker binding, and the study's framing needs
+rewording. Either outcome is reportable; this is registered so that neither can
+be chosen after the fact.
+
+Swap rows are switched off in these arms (`--swap-budgets` empty): the
+counterfactual is about labels, and these arms vary text.
+
+### 2026-10-06, a reader from a different family
+
+Registered before the run. **Every reader in this study is `qwen2.5`** — 7b,
+14b and 32b. That is one model family, one tokenizer and one training recipe,
+and it is the most obvious objection to the whole result.
+
+`gemma2:27b` is run on AMI under the registered design, as a reader reported
+separately and never pooled, exactly as the plan already requires. It is
+comparable in size to `qwen2.5:32b` and shares no lineage with it.
+
+It may fail the headroom gate, as `qwen2.5:7b` did. That is a result and is
+reported as one; no sweep follows a failed gate.
+
 ## Results (2026-09-28)
 
 These are reported against the rules above. Rendered tables are in
